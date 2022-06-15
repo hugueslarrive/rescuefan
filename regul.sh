@@ -9,11 +9,9 @@ do
     echo $TEMP
     if [ $TEMP -lt 40 ]; then
         echo "speed_down" | tee /dev/ttyS3
-        tail -n1 /dev/ttyS3
     fi
     if [ $TEMP -gt 40 ]; then
         echo "speed_up" | tee /dev/ttyS3
-        tail -n1 /dev/ttyS3
     fi
     sleep 1
 done
