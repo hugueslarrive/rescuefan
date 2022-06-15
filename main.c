@@ -12,6 +12,8 @@
 #include "../modules/hrtim/hrtim.h"
 #include "xtimer.h"
 
+static uint16_t period;
+
 static int cmd_fan(int argc, char**argv)
 {
     if (argc != 2) {
@@ -21,12 +23,12 @@ static int cmd_fan(int argc, char**argv)
     }
 
     uint8_t power = atoi(argv[1]);
-    if (power < 1 || power > 100) {
+    if (power > 68) {
         printf("Error: invalid power: %d\n", power);
         return 1;
     }
 
-    hrtim_pwm_set(0, TIMB, (11200 * power / 100), 0);
+    hrtim_pwm_set(0, TIMB, (period * power / 100), 0);
     return 0;
 }
 
@@ -37,13 +39,17 @@ static const shell_command_t shell_commands[] = {
 
 int main(void)
 {
-    puts("HRTIM peripheral driver test\n");
+    puts("rescuefan :\
+    Utilisation d'une carte stm32f334 discovery comme convertisseur de\
+    5 à 12 volts afin d'alimenter un ventilateur 12V 0.15A (1,8W) à\
+    partir d'un port USB 2 (2,5W max).\\n");
 
     uint32_t freq;
 
     /** - Initialize the master timer, TIMA and TIMB at 250KHz frequency */
     freq = KHZ(250);
-    hrtim_init_master(0, &freq);
+    period = hrtim_init_master(0, &freq);
+    printf("period = %d\n\n", period);
     hrtim_init_tu(0, TIMA, &freq);
     hrtim_init_tu(0, TIMB, &freq);
 
@@ -59,17 +65,17 @@ int main(void)
     //~ hrtim_set_cb_set(0, TIMA, OUT2, PER);   /* PA9  N1 Drive */
     hrtim_out_en(0, TIMA, OUT1);
 
-    /** - Set complementary outputs and 60% duty-cycle for TIMB */
+    /** - Set complementary outputs and duty-cycle for TIMB */
     /* TIMB OUT1    PA10     N2 Drive */
     /* TIMB OUT2    PA11     P2 Drive */
     hrtim_cmpl_pwm_out(0, TIMB);
-    hrtim_pwm_set(0, TIMB, 1120, 0);
+    hrtim_pwm_set(0, TIMB, 0, 0);
     hrtim_out_en(0, TIMB, (OUT1 | OUT2));
 
     /** - Need a soft start */
-    for (uint16_t p = 1120; p <= 11200; p += 1120) {
-        xtimer_sleep(1);
-        printf("p = %d\n", p);
+    for (uint16_t p = 1; p <= (period * 68 / 100); ++p) {
+        xtimer_usleep(1117);
+        if (!(p%1000) || p >= (period * 68 / 100)) printf("p = %d\n", p);
         hrtim_pwm_set(0, TIMB, p, 0);
     }
     
