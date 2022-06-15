@@ -35,19 +35,25 @@ static int cmd_fan(int argc, char**argv)
 
 static int cmd_speed_up(int argc, char**argv)
 {
-    (void)argc, argv;
+    (void)argc; (void)argv;
+
     power = power < 68 ? power + 1 : 68;
+
     hrtim_pwm_set(0, TIMB, (period * power / 100), 0);
     printf("\r %d%%    ", power);
+
     return 0;
 }
 
 static int cmd_speed_down(int argc, char**argv)
 {
-    (void)argc, argv;
+    (void)argc; (void)argv;
+
     --power;
+
     hrtim_pwm_set(0, TIMB, (period * power / 100), 0);
     printf("\r %d%%    ", power);
+
     return 0;
 }
 
