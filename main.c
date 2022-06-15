@@ -13,6 +13,7 @@
 #include "xtimer.h"
 
 static uint16_t period;
+static uint8_t power;
 
 static int cmd_fan(int argc, char**argv)
 {
@@ -22,7 +23,7 @@ static int cmd_fan(int argc, char**argv)
         return 1;
     }
 
-    uint8_t power = atoi(argv[1]);
+    power = atoi(argv[1]);
     if (power > 68) {
         printf("Error: invalid power: %d\n", power);
         return 1;
@@ -32,8 +33,28 @@ static int cmd_fan(int argc, char**argv)
     return 0;
 }
 
+static int cmd_speed_up(int argc, char**argv)
+{
+    (void)argc, argv;
+    power = power < 68 ? power + 1 : 68;
+    hrtim_pwm_set(0, TIMB, (period * power / 100), 0);
+    printf("\r %d%%    ", power);
+    return 0;
+}
+
+static int cmd_speed_down(int argc, char**argv)
+{
+    (void)argc, argv;
+    --power;
+    hrtim_pwm_set(0, TIMB, (period * power / 100), 0);
+    printf("\r %d%%    ", power);
+    return 0;
+}
+
 static const shell_command_t shell_commands[] = {
     { "fan", "Set fan power in percent", cmd_fan },
+    { "speed_up", "Increase speed", cmd_speed_up },
+    { "speed_down", "Decrease speed", cmd_speed_down },
     { NULL, NULL, NULL }
 };
 

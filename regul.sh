@@ -8,10 +8,12 @@ do
     TEMP=`powershell.exe -File gettemp.ps1 | sed -e 's/\r//'`
     echo $TEMP
     if [ $TEMP -lt 40 ]; then
-        echo "fan 10" | tee /dev/ttyS3
+        echo "speed_down" | tee /dev/ttyS3
+        cat /dev/ttyS3
     fi
-    if [ $TEMP -gt 45 ]; then
-        echo "fan 100" | tee /dev/ttyS3
+    if [ $TEMP -gt 40 ]; then
+        echo "speed_up" | tee /dev/ttyS3
+        cat /dev/ttyS3
     fi
-    sleep 10
+    sleep 1
 done
